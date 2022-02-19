@@ -1,0 +1,46 @@
+---
+Resources:
+  WebServerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access on ports 80 and 22
+      GroupName: MyWebServer SG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 102.176.94.128/32
+      Tags:
+        - Key: Name
+          Value: MyWebSever SG
+      VpcId: vpc-fb0ccd93
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SubnetId: subnet-4ecd8503
+      SecurityGroupIds:
+        - !Ref WebServerSG
+      KeyName: CloudFormation Test
+      ImageId: ami-08cfb7b19d5cd546d
+      Tags:
+        - Key: Name
+          Value: MyWebServer
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          sudo su
+          yum update -y
+          yum install -y httpd
+          cd /var/www/html
+          wget https://github.com/azeezsalu/techmax/archive/refs/heads/main.zip
+          unzip main.zip
+          cp -r techmax-main/* /var/www/html/
+          rm -rf techmax-main main.zip
+          systemctl enable httpd 
+          systemctl start httpd
